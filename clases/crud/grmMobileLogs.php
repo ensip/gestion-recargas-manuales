@@ -18,21 +18,18 @@ class grmMobileLogs {
 
 		$campos_estado = $this->getCamposByEstado();
 
-		$usd = obtenerCupByUsd($data->cuc);
-
 		$rec['user_id'] = mli_put($con, $data->id_usuario);
 		$rec['fecha'] = mli_put($con, date('Y-m-d H:i:s'));
 		$rec['operation'] = mli_put($con, 'return_payment');
 		$rec['CurrencyCode'] = mli_put($con, 'CUC');
 		$rec['country_code'] = mli_put($con, 'CU');
 		$rec['euro_rate'] = mli_put($con, 0);
-		$rec['amount'] = mli_put($con, str_replace(',', '.', $data->cuc));
-		$rec['amount_cuc'] = mli_put($con, $usd);
-		$rec['amount_usd'] = mli_put($con, 0);
-		$rec['to_send'] = mli_put($con, $usd);
+		$rec['amount'] = mli_put($con, str_replace(',', '.', $data->eur));
+		$rec['to_send'] = mli_put($con, $data->cuc);
 		$rec['mobOperator'] = mli_put($con, 'CU');
 		$rec['mobNumber'] = mli_put($con, $data->numMobil);
 		$rec['status'] = mli_put($con, $campos_estado['status']);
+		$rec['message'] = mli_put($con, $campos_estado['message']);
 		$rec['created'] = mli_put($con, time());
 		$rec['ResultId'] = mli_put($con, $campos_estado['ResultId']);
 		$rec['ResultStr'] = mli_put($con, $campos_estado['ResultStr']);
@@ -47,11 +44,13 @@ class grmMobileLogs {
 		$campos_by_estado = array(
 			1 => array(
 				'status' => 1,
+				'message' => 'Success',
 				'ResultId' => 1,
 				'ResultStr' => 'Success'
 			),
 			2 => array(
 				'status' => 'FAILED',
+				'message' => 'Error',
 				'ResultId' => 0	,
 				'ResultStr' => 'Ha ocurrido un error'
 			)
@@ -61,7 +60,7 @@ class grmMobileLogs {
 
 	public function insert_mobile_logs() {
 		$data = $this->generar_datos_mobile_logs();
-
+		
 		$con = getConn();
 
 		$fields = '';
