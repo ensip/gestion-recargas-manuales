@@ -91,6 +91,10 @@ class ActualizarJyctel {
 
 		$log = "actualizar recarga id : " .$this->id_recarga . " [".$celular."] con estado:".$this->estado_recarga . " res_insertar : ".($res_update ? 'ok' : 'ko')."";
 		syslog(LOG_INFO, __FILE__ . ':' . __method__ . ':' . $log);
+		
+		if ($res_update == 'ok') {
+			notificacionSMS('jyctel');
+		}
 
 		return $res_update;
 	}

@@ -82,3 +82,16 @@ function obtenerCupByUsd($cuc) {
 	$cup = (new PreciosNuevos())->convertMontoToCUP($cuc * 100);
 	return $cup;
 }
+
+function notificacionSMS($empresa) {
+
+	$sql = "update runtime_control set valor = 1 where clave = 'sms_cubacel_recargas_manual' and valor = 0";
+
+	if ($empresa == 'ensip') {
+		$con = getConn();
+	}
+	if ($empresa == 'jyctel') {
+		$con = getConn(DB_prepagos);
+	}
+	$con->query($sql);
+}
