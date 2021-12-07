@@ -6,7 +6,10 @@ include(__dir__ . '/../../inc/funciones.jyctel.php');
 
 
 class ExportarJyctel extends ExportarEmpresa {
-
+	
+	/*
+	 *	los filtros son sobre los contratos y recargas hechas con el proveedor manual
+	 * */
 	protected function setFiltros($filtros) {
 		$previo_and = 0;
 
@@ -15,7 +18,7 @@ class ExportarJyctel extends ExportarEmpresa {
 			$fechas = $filtros['fechas'];
 			$hay_filtros_fechas = 1;
 			
-			$this->filtros .= ' and';
+			$this->filtros = ' and';
 			if (isset($fechas['inicial'])) {
 				$this->filtros .= sprintf(" fecha >= '%s'", $fechas['inicial'] . ' 00:00:01' );
 			} else {
@@ -33,12 +36,6 @@ class ExportarJyctel extends ExportarEmpresa {
 			$this->filtros .= ' and `check` ' . $this->formatCheck($filtros['estado']);
 		}
 
-		if ($filtros['estado'] == 1 || $filtros['estado'] == 2) {
-			$this->filtros .= " and token in (select token from ".PREFIX_TABLE."mobile_logs where plataforma like '%manual_cuba%' )";
-		}
-		
-		$this->filtros .= " order by fecha desc";	
-
 		if (!$hay_filtros_fechas) {
 			$this->filtros .= " limit 0";
 		}
@@ -46,9 +43,15 @@ class ExportarJyctel extends ExportarEmpresa {
 
 	private function formatCheck($select_estado_recargas) {
 
-		$check = "=" . (int)$select_estado_recargas;
+		$estado_recargas = (int)$select_estado_recargas;
+
+		if ($estado_recargas == 3) {
+			$estado_recargas = (int)ESTADO_REC_BUSQUEDA_JYCTEL; 
+		}
+
+		$check = "=" . $estado_recargas;
 		if ($select_estado_recargas == 4) {
-			$check = "not in (1,2,3)";
+			$check = "not in (".ESTADO_CONTRATO_HECHO.",".ESTADO_CONTRATO_ERROR.",".ESTADO_REC_BUSQUEDA_JYCTEL.")";
 		}
 		return $check;
 	}	
@@ -56,14 +59,15 @@ class ExportarJyctel extends ExportarEmpresa {
 	protected function getData() {
 		
 		$this->empresa = 'jyctel';
-		
-		$listado = new ListadosJyctel();
+		$exportar = 1;
+		$listado = new ListadosJyctel($exportar);
+		$listado->setFiltros($this->filtros);	
 		$recargas = $listado->get();
 
 		$new_recargas = array();
 		if (!empty($recargas)) {
 			
-			$this->setNumRows(count($recargas));
+			$this->setNumRows($listado->getCantidad());
 
 			foreach ($recargas as $idx => $recarga) {
 				foreach ($recarga as $key => $value) {

@@ -5,9 +5,24 @@ class ListadosEnsip {
 
 	public function get() {
 		syslog(LOG_INFO, __FILE__ . ':'.__CLASS__ );
-		return $this->getRecargas();
-	}
 
+		if ($this->checkIfSonManuales()) { //ahora mismo check if recarga doble or not
+
+			return $this->getRecargas();
+		} else {
+			return array();
+		}
+	}
+	private function checkIfSonManuales() {
+		$con = getConn();
+		$sql = "select recarga_doble from recarga_y_promos ";
+		$res = $con->query($sql);
+		if ($res->num_rows > 0) {
+			return false;
+	       	} else {
+			return true;
+		}
+	}
 	private function getRecargas() {
 		$con = getConn();
 

@@ -5,6 +5,9 @@ include_once('/data/www/ensip/admin/inc/funciones.inc.php');
 if (!defined('ESTADO_CONTRATO_HECHO')) {
 	define('ESTADO_CONTRATO_HECHO', 1);
 }
+if (!defined('ESTADO_CONTRATO_ERROR')) {
+	define('ESTADO_CONTRATO_ERROR', 2);
+}
 if (!defined('ESTADO_PENDIENTE_MANUAL')) {
 	define('ESTADO_PENDIENTE_MANUAL', 9);
 }

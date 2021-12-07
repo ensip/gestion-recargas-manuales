@@ -85,7 +85,7 @@ function obtenerCupByUsd($cuc) {
 
 function notificacionSMS($empresa) {
 
-	$sql = "update runtime_control set valor = 1 where clave = 'sms_cubacel_recargas_manual' and valor = 0";
+	$sql = "update runtime_control set valor = 1 where clave = 'sms_cubacel_recargas_manual'";
 
 	if ($empresa == 'ensip') {
 		$con = getConn();

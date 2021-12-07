@@ -85,6 +85,7 @@ class grmFactonline {
 		);
 		return $campos_by_estado[$this->estado_recarga];
 	}
+
 	public function getRecargasInsertadas() {
 
 		$sql = "select count(id) as cant from ".$this->prefix_table."recargas_contratos_hechas where id_c = " . (int)$this->id_contrato;
@@ -97,6 +98,7 @@ class grmFactonline {
 		}
 		return 0;
 	}
+
 	public function insert_mobile_logs($data) {
 
 		$new_data = $this->generar_datos_mobile_logs($data);

@@ -1,8 +1,16 @@
 <?php
 
 class ListadosJyctel {
+	private $cantidad = 0;
 	private $excluir_nauta = 1;
+	private $exportar = 0;
+	private $filtros = '';
 	private $prefix_table = PREFIX_TABLE_PREPAGOS;
+
+	public function __construct($exportar = 0) {
+
+		$this->exportar = $exportar;
+	}
 
 	private function checkNumber($number) {
 		
@@ -32,8 +40,21 @@ class ListadosJyctel {
 
 		return true;
 	}
+	
+	private function esRecargaProveedorManual($id_contrato) {
+		
+		$con = getConn(DB_factura);
+		$sql = "select * from mobile_logs where pago = 'IDC_" . $id_contrato . "' and plataforma = 'manual_cuba'";
+		$res = $con->query($sql);
+
+		if ($res->num_rows > 0) {
+			return true;
+		}
+		return false;
+	}
 
 	public function get() {
+	
 		syslog(LOG_INFO, __FILE__ . ':'.__CLASS__ );
 		$contratos = $this->getContratosRecargas();
 
@@ -44,22 +65,29 @@ class ListadosJyctel {
 		}
 		return $recargas;
 	}
-
+	public function getCantidad() {
+		return $this->cantidad;
+	}
 	private function getWhere() {
-
-		$where = "recargas not like 'a:0:%' and `preventa` = '0' and `check`= " . ESTADO_REC_BUSQUEDA_JYCTEL;
+		
+		$where = "recargas not like 'a:0:%' and `preventa` = '0' ";
+		if (empty($this->filtros)) {
+			$where .= "and `check`= " . ESTADO_REC_BUSQUEDA_JYCTEL;
+		} else {
+			$where .= $this->filtros;
+		}
 		//$where = "id=409615 ";
-
+		syslog(LOG_INFO, __FILE__ . ':'. __method__ . ':FILTROS->'.$where);
 		return $where;
 	}
 
 	private function getContratosRecargas() {
+
 		$con = getConn(DB_prepagos);
 
 		$contratos = array();
 
-		$sql = "SELECT id,recargas,fecha,num_pedido,`check` FROM ".$this->prefix_table."contratos WHERE " . $this->getWhere() . " order by fecha desc ".
-			(grmTEST == 1 ? "limit 5" : '');
+		$sql = "SELECT id,recargas,fecha,num_pedido,`check` FROM ".$this->prefix_table."contratos WHERE " . $this->getWhere() . " order by fecha desc " . (grmTEST == 1 ? "limit 5" : '');
 		$res = $con->query($sql);
 		
 		syslog(LOG_INFO, __FILE__ . ':'. __method__ . ':'.$sql.':'.$res->num_rows);
@@ -78,13 +106,19 @@ class ListadosJyctel {
 		$i = 0;
 		foreach ($contratos as $contrato) {
 			
+			if ($this->exportar) {
+				if (!$this->esRecargaProveedorManual($contrato->id)) {
+					continue;
+				}
+			}
+	
 			if ($recargas_contrato = unserialize($contrato->recargas)) {
 				
 				foreach ($recargas_contrato as $key => $value) {
 
 					$celular = getNumber($value);
 
-					if (!$this->esPosibleListarRecarga(
+					if (!$this->exportar && !$this->esPosibleListarRecarga(
 						array(
 							'id_contrato' => $contrato->id, 
 							'celular' => $celular,
@@ -95,7 +129,6 @@ class ListadosJyctel {
 					}
 
 					$stdClass = new StdClass();
-
 					$stdClass->id = $contrato->id;
 
 					if (!empty($celular)) {
@@ -122,9 +155,16 @@ class ListadosJyctel {
 		}
 		if (!empty($recargas)) {
 			$recargas = (object)$recargas;
+			$this->setCantidad($i);
 		}
-		//syslog(LOG_INFO, __FILE__ . ':'. __method__ . ':'.$sql.':'.$res->num_rows);
-			
 		return $recargas;
+	}
+	
+	private function setCantidad ($cantidad) {
+		$this->cantidad = $cantidad;
+	}
+
+	public function setFiltros($filtros) {
+		$this->filtros = $filtros;
 	}
 }
