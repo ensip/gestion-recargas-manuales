@@ -25,7 +25,7 @@ function extraerDatosId($id) {
 function getCantPendientes($empresa) {
 	if ($empresa == 'ensip') {
 		$con = getConn();
-		$sql = "select id from ".PREFIX_TABLE."recargas_pendientes_no_preventa where `check` = " . ESTADO_REC_BUSQUEDA_ENSIP;
+		$sql = "select id from ".PREFIX_TABLE."recargas_pendientes_no_preventa where `check` = " . ESTADO_REC_BUSQUEDA_ENSIP . " and 0 in (select recarga_doble from recarga_y_promos)";
 		$res = $con->query($sql);
 		return $res->num_rows;
 	}
