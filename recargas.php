@@ -81,15 +81,24 @@ if (isset($empresas)) {
 						<h6 class="text-center text-dark m-0">Recargas Pendientes</h6>	
 					</li>
 <?php 
+$cant_pendientes = 0;
+$cant_pendientes_empresas = array();
+
 if (isset($empresas)) { 
-	foreach ($empresas as $empresa) { ?>
+	foreach ($empresas as $key => $empresa) { 
+		$cant_pendientes_empresas[$empresa['nombre']] = 0;
+?>
 					<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-5">
 						<div class="col-md-4">
 							<h6><?=$empresa['nombre']?></h6>
 						</div>
 <?php 
 		$cant_pendientes = getCantPendientes($empresa['id']);
-		$badge = ($cant_pendientes) ? 'danger' : 'info';
+	
+		if ($cant_pendientes > 0) {
+			$cant_pendientes_empresas[$empresa['nombre']] = 1;
+		}
+		$badge = ($cant_pendientes > 0) ? 'danger' : 'info';
 ?>
 						<div class="col-md-4">
 							<span class="badge badge-<?=$badge?> badge-pill">
@@ -100,8 +109,25 @@ if (isset($empresas)) {
 <?php	}
 } ?>
 				</ul>
+<?php
+if (!empty($cant_pendientes_empresas)) {
+?>
+				<div class="card text-center">
+					<div class="card-header">
+						<h6>Envio SMS alertas</h6>			
+<?php
+	foreach ($cant_pendientes_empresas as $empresa => $value) {
+		if (!$value && alertaDesactivada($empresa)) {
+?>
+						<div class="alerta_sms_activada mt-1">
+							<button type="button" class="btn btn-small btn-danger" onclick="activarSMS('<?=strtolower($empresa)?>');">Activar alertas <?=$empresa?></button>
+						</div>
+<?php 		} ?>
+<?php 	} ?>
+					</div>
+				</div>
 			</div>
-
+<?php } ?>
 		</div>
 	</section>
 	<hr class="my-3">

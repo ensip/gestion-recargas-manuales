@@ -21,6 +21,35 @@ $(function() {
 	$("#f_fin").datetimepicker({format:'YYYY-MM-DD'});
 });
 
+function activarSMS(empresa) {
+
+	$.post( "./ajax/ajax_generico.php", { alerta_empresa:empresa })
+	.done(function(json_data) {
+		
+		console.log(json_data);	
+		var data = '';
+		
+		try {
+			data = JSON.parse(json_data);
+		} catch (e) {
+
+			$(".alerta_sms_activada").html('<h4><div class="badge badge-danger">Error al actualizar</div></h4>');
+		}
+		
+		if (data != '') {
+			if (data.error) {
+				$(".alerta_sms_activada").html('<h4><div class="badge badge-danger">Error al actualizar</div></h4>');
+
+			} else  {
+				$(".alerta_sms_activada").html('<h4><div class="badge badge-success">Activada alerta</div></h4>');
+			}
+		}
+
+	}).fail(function(response) {
+		    alert('Error: ' + response.responseText);
+	});
+}
+
 function activarBotonActualizar(estado = '') {
 
 	$('#update_estado').focus().prop("disabled", estado);

@@ -1,5 +1,24 @@
 <?php
 
+function alertaDesactivada($empresa) {
+	
+	$sql = "select valor from runtime_control where clave = 'sms_cubacel_recargas_manual' and valor = 0";
+
+	if ($empresa == 'Ensip') {
+		$con = getConn();
+		$res = $con->query($sql);
+		//echo "ensip: " . $res->num_rows;
+		return ($res->num_rows > 0) ? true : false;
+	}
+	if ($empresa == 'Jyctel') {
+		$con = getConn(DB_prepagos);
+		$res = $con->query($sql);
+		//echo "jyc: " . $res->num_rows;
+		return ($res->num_rows > 0) ? true : false;
+	}
+	return false;
+}
+
 function estadosExportar($id = '') {
 	$estados = array(
 		3 => 'Pendiente',
@@ -93,5 +112,5 @@ function notificacionSMS($empresa) {
 	if ($empresa == 'jyctel') {
 		$con = getConn(DB_prepagos);
 	}
-	$con->query($sql);
+	return $con->query($sql);
 }
