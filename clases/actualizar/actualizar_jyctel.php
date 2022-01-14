@@ -62,7 +62,7 @@ class ActualizarJyctel {
 		);
 		
 		$res_update = 0;
-
+		//sleep(3);return 'ok';
 		if (!isRechargeDone($data)) { //funciones.jyctel.php
 			$recargas = array();
 			$pre = new grmPrepagos($data);
@@ -70,7 +70,7 @@ class ActualizarJyctel {
 			
 			$cant_insertadas = $fo->getRecargasInsertadas();
 
-			$res_update_contrato = $pre->update_contrato($this->estado_recarga, $recarga, $confirmId, $cant_insertadas); //OK PROBADO	 
+			$res_update_contrato = $pre->update_contrato($this->estado_recarga, $confirmId, $cant_insertadas); //OK PROBADO	 
 				
 			if ($res_update_contrato) {
 
@@ -93,7 +93,7 @@ class ActualizarJyctel {
 		syslog(LOG_INFO, __FILE__ . ':' . __method__ . ':' . $log);
 		
 		if ($res_update == 'ok') {
-			notificacionSMS('jyctel');
+			notificacionSMS('jyctel'); //funciones.generales
 		}
 
 		return $res_update;

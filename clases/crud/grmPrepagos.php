@@ -19,9 +19,9 @@ class grmPrepagos {
 	 *	OK PROBADO
 	 *
 	 * */
-	public function update_contrato($estado, $new_recarga, $confirmId, $cant_insertadas) {
+	public function update_contrato($estado, $confirmId, $cant_insertadas) {
 
-		$new_recarga = array();
+		$new_recargas = array();
 		$recargas_lanzadas = 0;
 		$serialized_recargas = getContrato($this->id_contrato);
 
@@ -41,6 +41,7 @@ class grmPrepagos {
 				}
 			}
 		}
+
 		//return serialize($new_recargas);	
 		if (!empty($new_recargas) && is_array($new_recargas)){
 			$serialized_recargas = serialize($new_recargas);

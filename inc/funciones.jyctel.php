@@ -55,7 +55,6 @@ function getRecargaContrato($id_contrato, $id_recarga) {
  * *
  * * */
 function isRechargeDone($data) {
-	
 
 	$con = getConn(DB_factura);
 	

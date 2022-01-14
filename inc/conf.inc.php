@@ -44,9 +44,6 @@ if (!defined('PREFIX_TABLE_JYCTEL')) {
 if (!defined('PROVIDER_MANUAL')) {
 	define('PROVIDER_MANUAL', 'manual_cuba');
 }
-if (!defined('grmTEST')) {
-	define('grmTEST', 0);
-}
 
 $empresas = array(
 	'ensip' => array(

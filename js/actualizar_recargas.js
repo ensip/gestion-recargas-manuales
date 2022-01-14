@@ -77,18 +77,26 @@ class updateRecharges {
 		var self = this;
 		var promises = [];
 		var recargas_actualizadas = 0;
+		var recarga = [];
 
 		if (this.recharges.length > 0) {
 			
 			var dfd = $.Deferred();
 
+			var i = 0;
+
 			$.each (this.recharges, function(index, recharge) {
 				var tr_id = recharge.tr_id;
-		
+				
+				console.log(tr_id, recarga);
+				console.log(tr_id, recarga[i - 1]);
+
 				$('tr td.select_estado_recarga_'+tr_id).html('<img src="../../img/loading.gif" width="15" height="15">');
 
+				if ( i == 0 || recarga[i-1] === true) {
 				$.ajax({
 					url : "ajax/ajax_actualizar_recargas.php",
+					async: false,
 					type : 'POST',			                  
 					data : {
 						'actualizar_recarga_manual': 1,
@@ -108,13 +116,17 @@ class updateRecharges {
 						self.changeTrBg(tr_id, 'tr_success');
 						
 						$('.estado_recarga_' + tr_id).html( '<b>' + self.getTextEstadoRecarga(recharge.estado) + '</b>');
+						
+						recarga.push(i);
 
 						dfd.resolve();
 					} else {
 						self.changeTrBg(tr_id, 'bg-danger');
 					}
+					recarga[tr_id] = true;
 				});
-
+					i ++;
+				}
 			});
 			promises.push(dfd)
 
