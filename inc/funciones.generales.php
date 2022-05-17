@@ -44,9 +44,17 @@ function extraerDatosId($id) {
 function getCantPendientes($empresa) {
 	if ($empresa == 'ensip') {
 		$con = getConn();
-		$sql = "select id from ".PREFIX_TABLE."recargas_pendientes_no_preventa where `check` = " . ESTADO_REC_BUSQUEDA_ENSIP . " and 0 in (select recarga_doble from recarga_y_promos)";
+
+		$sql = "select id from ".PREFIX_TABLE."recargas_pendientes where numMobil not like '5300000000' and `check` = " . ESTADO_REC_BUSQUEDA_ENSIP;
 		$res = $con->query($sql);
-		return $res->num_rows;
+		$cant_preventas = $res->num_rows;
+	
+		$sql = "select id from ".PREFIX_TABLE."recargas_pendientes_no_preventa where numMobil not like '5300000000' and `check` = " . ESTADO_REC_BUSQUEDA_ENSIP;
+		$res = $con->query($sql);
+
+		$cant_pendientes = $res->num_rows;
+
+		return $cant_preventas + $cant_pendientes;
 	}
 	if ($empresa == 'jyctel') {
 		$con = getConn(DB_prepagos);
@@ -78,6 +86,18 @@ function getInfoRecargaListado ($empresa, $datos) {
 	}
 	return $info;
 }
+function getRecargayPromos($cols = 'recarga_doble') {
+
+	$con = getConn();
+	$sql = "select " . $cols . " from ".PREFIX_TABLE."recarga_y_promos ";
+	$res = $con->query($sql);
+
+	$row = null;
+	if ($res->num_rows > 0) {
+		$row = $res->fetch_object();
+	}
+	return $row;
+}
 
 function mli_put($con, $data) {
 	return $con->real_escape_string($data);
@@ -102,7 +122,7 @@ function obtenerCupByUsd($cuc) {
 	return $cup;
 }
 
-function notificacionSMS($empresa) {
+function NotificacionSMS($empresa) {
 
 	$sql = "update runtime_control set valor = 1 where clave = 'sms_cubacel_recargas_manual'";
 

@@ -19,7 +19,7 @@ class grmFactonline {
 		'user_id' => 15258
 	);
 
-	public function __construct($data) {
+	public function __construct($data = null) {
 
 		$this->con = getConn(DB_factura);
 
@@ -29,12 +29,6 @@ class grmFactonline {
 		
 	}
 
-	private function obtener_precio_usd($cuc) {
-		$tax = 1.25;
-		$cuc_rate = 0.999;
-		$usd_currency = round($cuc / $cuc_rate, 2);
-		return round($usd_currency * $tax, 2);
-	}
 	private function generar_datos_mobile_logs($data) {
 
 		$con = $this->con;
@@ -45,6 +39,13 @@ class grmFactonline {
 		$pn = new PreciosNuevos();	
 		$cup = $pn->convertCucToCup($data['monto']);
 		$usd = $pn->convertMontoToUSD($cup) / 100;
+
+		//recarga_manual_cuba contiene el valor a recargar por noriel
+		if (isset($data['recarga_manual_cuba']) && !empty($data['recarga_manual_cuba'])) {
+			
+			//$usd = $data['recarga_manual_cuba'];	
+			$usd = $pn->convertCupToUsd($data['recarga_manual_cuba']);
+		}
 
 		$rec['user_id'] = mli_put($con, $this->data_mobile_log['user_id']);
 		$rec['operation'] = mli_put($con, $this->data_mobile_log['operation']);
@@ -90,7 +91,7 @@ class grmFactonline {
 	 *	comprueba cuantas recargas hechas tiene el contratos (insertadas en tabla recargas_contratos_hechas)
 	 *
 	 * */
-	public function getRecargasInsertadas() {
+	public function getCantidadRecargasInsertadas() {
 
 		$sql = "select count(id) as cant from ".$this->prefix_table."recargas_contratos_hechas where id_c = " . (int)$this->id_contrato;
 		$res = $this->con->query($sql);
@@ -101,6 +102,46 @@ class grmFactonline {
 			return $row->cant;
 		}
 		return 0;
+	}
+
+	/*	
+	 *	comprueba cuantas recargas hechas tiene el contratos (insertadas en tabla recargas_contratos_hechas)
+	 *
+	 * */
+	public function get_recargas_contratos_hechas($id_r = '') {
+
+		$sql = "select id_c, id_r from ".$this->prefix_table."recargas_contratos_hechas where id_c = " . (int)$this->id_contrato . (!empty($id_r) ? ' and id_r = ' . $id_r : '');
+		$res = $this->con->query($sql);
+
+		$recargas_contratos_hechas = [];
+		if ($res->num_rows > 0) {
+			while ($rows = $res->fetch_object()) {
+				$recargas_contratos_hechas[] = $row;
+			}
+
+		}
+		return $recargas_contratos_hechas;
+	}
+	/*
+	 *	OK probado
+	 * */
+	public function insert_recargas_contratos_hechas($id_recarga = '') {
+		
+		if (!$this->id_contrato || $this->id_recarga == '-1') {
+
+			syslog(LOG_INFO, __FILE__ . ':' .__method__ .':datos id_recarga o id_contrato faltantes');
+			return false;
+		}
+
+		if (!empty($id_recarga)) {
+			$this->id_recarga = $id_recarga;
+		}
+
+		$sql = sprintf("insert into %srecargas_contratos_hechas (id_c,id_r) values (%s, %s)", $this->prefix_table, $this->id_contrato, $this->id_recarga);
+		$res = $this->con->query($sql);
+		syslog(LOG_INFO, __FILE__ . ':' .__method__ .':'.$sql . ':'.$res);
+
+		return $res;
 	}
 
 	public function insert_mobile_logs($data) {
@@ -116,7 +157,7 @@ class grmFactonline {
 
 		$fields = rtrim($fields,',');
 		$values = rtrim($values,',');
-
+		
 		$sql = sprintf("insert into %smobile_logs (%s) values (%s)", $this->prefix_table, $fields, $values);
 		$res = $this->con->query($sql);
 		
@@ -127,23 +168,40 @@ class grmFactonline {
 		return true;
 	}
 
-	/*
-	 *	OK probado
-	 * */
-	public function insert_recargas_contratos_hechas() {
+	public static function insert_sms_cdr_notifications($data) {
 		
-		if (!$this->id_contrato || $this->id_recarga == '-1') {
-
-			syslog(LOG_INFO, __FILE__ . ':' .__method__ .':datos id_recarga o id_contrato faltantes');
-			return false;
+		$con = getConn(DB_factura);
+		$sql = sprintf("INSERT INTO FACTONLINE.sms_cdr_notifications ".
+			"(`sender_info`,`fecha`,`send_number`,`messageid`,`proveedor`,`resultID`,`msgID`,`resultMess`,`message`,`callback`)".
+			" VALUE ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
+			'Jyctel',
+			date('Y-m-d H:i:s'),
+			$data['dato_envio'],
+			$data['messageid'],
+			$data['proveedor'],
+			$data['resultID'],
+			$data['msgID'],
+			$data['resultMess'],
+			$data['texto_notificacion'],
+			1
+		);
+		$res = $con->query($sql);
+		
+		if($con->errno > 0){
+			return array('error' => "Prepare failed: (". $con->errno.") ".$con->error." $sql");
 		}
 
-		$sql = sprintf("insert into %srecargas_contratos_hechas (id_c,id_r) values (%s, %s)", $this->prefix_table, $this->id_contrato, $this->id_recarga);
-		$res = $this->con->query($sql);
-		syslog(LOG_INFO, __FILE__ . ':' .__method__ .':'.$sql . ':'.$res);
+		return true;
 
-		return $res;
 	}
+
+	private function obtener_precio_usd($cuc) {
+		$tax = 1.25;
+		$cuc_rate = 0.999;
+		$usd_currency = round($cuc / $cuc_rate, 2);
+		return round($usd_currency * $tax, 2);
+	}
+
 	public function set_estado_recarga($estado_recarga) {
 		$this->estado_recarga = $estado_recarga;
 	}

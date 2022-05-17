@@ -16,7 +16,7 @@ if(User::check()) {
 	$user = User::getByID($_SESSION['user']['id']);
 	syslog(LOG_INFO, __FILE__ . "user: ".serialize($user['id']) );
 	
-	$sql = "select permiso from admpermisos where id_admin = ".$_SESSION['user']['id']." and estado = 1 and permiso = 'gestion-recargas-manual'";
+	$sql = "select permiso from admpermisos where id_admin = ".$user['id']." and estado = 1 and permiso = 'gestion-recargas-manual'";
 	$res = getResultSQL( $sql );
 	if (!$res->num_rows) {
 		header('Location: logout.php');

@@ -76,37 +76,52 @@ function activarBotonExportar(estado = false) {
 }
 
 function buscarListados(tab_empresa) {
+	
+	$("#listado-recargas").html();
+	$("#listado-recargas").html('<h6 class="badge badge-info"><img src="../../img/loading.gif" width="15" height="15"> ... Cargando recargas ' + tab_empresa + ' ...</h6>');
 		
-		$("#listado-recargas").html();
-		$("#listado-recargas").html('<h6 class="badge badge-info"><img src="../../img/loading.gif" width="15" height="15"> ... Cargando recargas ' + tab_empresa + ' ...</h6>');
+	var promises = [];
+	var dfd = $.Deferred();	
 
-		$.post( "./ajax/ajax_listados_recargas.php", { listado_recargas:1, empresa: tab_empresa })
-		.done(function(json_data) {
+	$.post( "./ajax/ajax_listados_recargas.php", { 
+		listado_recargas:1, 
+		empresa: tab_empresa 
 
-			//console.log(json_data);	
-			var data = '';
+	}).done(function(json_data) {
 			
-			try {
-				data = JSON.parse(json_data);
-			} catch (e) {
-				
-				$("#listado-recargas").html('<div class="col-md-5 text-center offset-md-3 my-2 alert alert-danger">Error al cargar listado recargas</div>');
-			}
+	//	console.log(json_data);	
+		var data = '';
+		
+		try {				
+			data = JSON.parse(json_data);
+		} catch (e) {
+			console.log(e);		
+			$("#listado-recargas").html('<div class="col-md-5 text-center offset-md-3 my-2 alert alert-danger">Error al cargar listado recargas</div>');
+		}
 			
-			if (data != '') {
-				if (data.error && data.error == 'no-recargas') {
-					$("#listado-recargas").html('<div class="col-md-5 text-center offset-md-3 my-2 alert alert-warning">No hay recargas de <b>' + tab_empresa +'</b> pendientes de hacerse</div>');
+		if (data != '') {
+			if (data.error && data.error == 'no-recargas') {
+				$("#listado-recargas").html('<div class="col-md-5 text-center offset-md-3 my-2 alert alert-warning">No hay recargas de <b>' + tab_empresa +'</b> pendientes de hacerse</div>');
 
-				} else  {
-					$("#listado-recargas").html();
-					$("#listado-recargas").html(data);
-				}
-				$('#tab-selected').val(1);
+			} else  {
+				$("#listado-recargas").html();
+				$("#listado-recargas").html(data);
 			}
+			$('#tab-selected').val(1);
+			
+			dfd.resolve();
+			promises.push(dfd);
+	
+			$.when.apply($, promises).done(function () {
+		
+				updatePendientes(tab_empresa);
+			});
 
-		}).fail(function(response) {
-			    alert('Error: ' + response.responseText);
-		});
+		}
+
+	}).fail(function(response) {
+		    alert('Error: ' + response.responseText);
+	});
 }
 
 function changeEstado(id) {
@@ -237,7 +252,7 @@ function selectNewState(e) {
 			$('.table_recharges tr#' +id).addClass('tr_selected');
 		} 
 	});            
-	console.log(estado);
+	//console.log(estado);
 	if (actualizar_estado) {
 		estado_boton = false;
 	}
@@ -265,6 +280,12 @@ function selectNewsStates() {
 	if (actualizar_estado)
 		activarBotonActualizar((estado != '' ? false : true));
 }
+function updatePendientes(empresa) {
+		
+	var pendientes = parseInt($('#table_recharges_'+empresa+' tr:last').attr('id')) + 1;
+	$('#recargas_pendientes_' + empresa).html(pendientes);
+	
+}
 
 $( document ).ready(function() {
 	checkTabSelected();
@@ -281,7 +302,5 @@ $( document ).ready(function() {
 		if ($(this).val() != '') {
 			buscarListados($(this).val());
 		}
-
 	});
-
 });

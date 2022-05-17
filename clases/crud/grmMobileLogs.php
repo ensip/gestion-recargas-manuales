@@ -4,10 +4,16 @@ class grmMobileLogs {
 
 	private $data = array();
 	private $estado_recarga = 0;
+	private $plataforma = array(
+		'guardada' => 'API recargas pendientes no preventa',
+		'preventa' => 'API recargas pendientes'
+	);
+	private $tipo_recarga = 'guardada';
 
-	public function __construct($data, $estado_recarga) {
+	public function __construct($data, $estado_recarga, $tipo_recarga = 'guardada') {
 		$this->data = $data;
 		$this->estado_recarga = $estado_recarga;
+		$this->tipo_recarga = $tipo_recarga;
 	}
 
 	private function generar_datos_mobile_logs() {
@@ -25,6 +31,7 @@ class grmMobileLogs {
 		$rec['country_code'] = mli_put($con, 'CU');
 		$rec['euro_rate'] = mli_put($con, 0);
 		$rec['amount'] = mli_put($con, str_replace(',', '.', $data->eur));
+		$rec['amount_cuc'] = mli_put($con, $data->cuc);
 		$rec['to_send'] = mli_put($con, $data->cuc);
 		$rec['mobOperator'] = mli_put($con, 'CU');
 		$rec['mobNumber'] = mli_put($con, $data->numMobil);
@@ -34,8 +41,11 @@ class grmMobileLogs {
 		$rec['ResultId'] = mli_put($con, $campos_estado['ResultId']);
 		$rec['ResultStr'] = mli_put($con, $campos_estado['ResultStr']);
 		$rec['ConfirmId'] = mli_put($con, time());
-		$rec['plataforma'] = mli_put($con, 'API recargas pendientes no preventa ' . PROVIDER_MANUAL);
+		$rec['plataforma'] = mli_put($con, $this->plataforma[$this->tipo_recarga] . ' ' . PROVIDER_MANUAL);
 		$rec['token'] = mli_put($con,str_replace(array("\n", "\r", " "), '', $data->token));
+		if (isset($data->id_precio)) {
+			$rec['id_precio'] = mli_put($con, $data->id_precio);
+		}
 
 		return $rec;
 	}
@@ -74,7 +84,6 @@ class grmMobileLogs {
 		$values = rtrim($values,',');
 
 		$sql = sprintf("insert into %smobile_logs (%s) values (%s)", PREFIX_TABLE, $fields, $values);
-
 		$stmt = $con->prepare($sql);
 		if(!$stmt){
 			return array('error' => "Prepare failed: (". $con->errno.") ".$con->error." $sql");

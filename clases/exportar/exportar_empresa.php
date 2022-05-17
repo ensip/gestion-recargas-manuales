@@ -7,6 +7,7 @@ class ExportarEmpresa {
 	protected $csv = "id;id_usuario;numMobil;cup;precio;estado;fecha;token;empresa\r\n";
 	protected $empresa = '';
 	protected $filtros = '1';
+	protected $filtros_string = '1';
 	protected $post = array();
 
 	public function __construct() {
@@ -14,8 +15,7 @@ class ExportarEmpresa {
 	}
 
 	public function export($filtros) {
-		$this->setFiltros($filtros);
-		$this->getData();
+		$this->getData($filtros);
 
 		$res = array(
 			'link' => $this->exportCsv(),

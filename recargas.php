@@ -101,8 +101,8 @@ if (isset($empresas)) {
 		$badge = ($cant_pendientes > 0) ? 'danger' : 'info';
 ?>
 						<div class="col-md-4">
-							<span class="badge badge-<?=$badge?> badge-pill">
-								<button type="submit" class="btn btn-sm p-0 text-light" value="3" name="recargas_pendientes"><?=$cant_pendientes?></button>
+							<span class="badge badge-<?=$badge?> badge-pill badge-<?=$empresa['id']?>">
+								<button type="submit" class="btn btn-sm p-0 text-light" value="3" name="recargas_pendientes" id="recargas_pendientes_<?=$empresa['id']?>"><?=$cant_pendientes?></button>
 							</span>
 						</div>
 					 </li>

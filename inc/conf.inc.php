@@ -1,7 +1,9 @@
 <?php
 include_once('/data/www/ensip/admin/inc/funciones.inc.php');
 
-
+if (!defined('ESTADO_CONTRATO_NO_HACER')) {
+	define('ESTADO_CONTRATO_NO_HACER', 3);
+}
 if (!defined('ESTADO_CONTRATO_HECHO')) {
 	define('ESTADO_CONTRATO_HECHO', 1);
 }
@@ -11,6 +13,10 @@ if (!defined('ESTADO_CONTRATO_ERROR')) {
 if (!defined('ESTADO_PENDIENTE_MANUAL')) {
 	define('ESTADO_PENDIENTE_MANUAL', 9);
 }
+if (!defined('ESTADO_RECARGA_HECHA')) {
+	define('ESTADO_RECARGA_HECHA', 1);
+}
+
 if (!defined('ESTADO_REC_BUSQUEDA_ENSIP')) {
 	define('ESTADO_REC_BUSQUEDA_ENSIP', 3);
 }
@@ -27,6 +33,7 @@ if (!defined('PREFIX_TABLE')) {
 		define('PREFIX_TABLE', '');
 	}
 }
+
 if (!defined('PREFIX_TABLE_PREPAGOS')) {
 	if (grmTEST == 1) {
 		define('PREFIX_TABLE_PREPAGOS', 'test.');
@@ -44,6 +51,12 @@ if (!defined('PREFIX_TABLE_JYCTEL')) {
 if (!defined('PROVIDER_MANUAL')) {
 	define('PROVIDER_MANUAL', 'manual_cuba');
 }
+if (!defined('PREVENTA_ENSIP')) {
+	define('PREVENTA_ENSIP', 'preventa');
+}
+if (!defined('PROGRAMADA_ENSIP')) {
+	define('PROGRAMADA_ENSIP', 'guardada');
+}
 
 $empresas = array(
 	'ensip' => array(
@@ -58,7 +71,8 @@ $empresas = array(
 function includeCrudEnsip() {
 	$cruds = array(
 		'grmMobileLogs.php',
-		'grmRecargasPendientesNoPreventa.php'
+		'grmRecargasPendientesNoPreventa.php',
+		'grmRecargasPendientes.php'
 	);	
 
 	foreach ($cruds as $crud) {
@@ -125,6 +139,14 @@ function includeFactoryActualizar() {
 			syslog(LOG_INFO, __FILE__ . ':' . __METHOD__ . ':including:'.$path);
 			include_once($path);
 		}
+
+		$path = __dir__ . "/../clases/actualizar/actualizar_" . $empresa['id'] . "_preventa.php";
+
+		if (is_file($path)) {
+			syslog(LOG_INFO, __FILE__ . ':' . __METHOD__ . ':including:'.$path);
+			include_once($path);
+		}
+
 	}
 }
 
@@ -186,12 +208,29 @@ function includeFuncionesJyctel() {
 	$includes_jyctel = array(
 		'inc/funciones.jyctel.php'
 	);
+	$paths = array('../', './', '../../');
 	foreach ($includes_jyctel as $include) {
-		$path = "../".$include;
-		if (is_file($path)) {
-			syslog(LOG_INFO, __FILE__ . ':' . __METHOD__ . ':including:'.$path);
-			include_once($path);
+		foreach ($paths as $path) {
+			$path .= $include;
+			if (is_file($path)) {
+				syslog(LOG_INFO, __FILE__ . ':' . __METHOD__ . ':including:'.$path);
+				include_once($path);
+			}
 		}
 	}
 }
+function includeNotificarJyctel() {
 
+	
+	$paths = array('./', '../', '../../', '../../../');
+
+	foreach ($paths as $path) {
+
+		$file =  __dir__ . "/" . $path . "clases/notificar/notificar_jyctel/";
+		if (is_dir($file)) {
+			include_once($file . 'notificacion.php');
+			include_once($file . 'medios/notificacion_sms.php');
+			include_once($file . 'medios/notificacion_email.php');
+		}
+	}
+}

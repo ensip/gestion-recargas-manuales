@@ -15,45 +15,48 @@ class grmPrepagos {
 		$this->id_recarga = $data['id_recarga_hecha'];
 	}
 
+
 	/*
-	 *	OK PROBADO
-	 *
+	 *	@return success:true, unsuccess:false
 	 * */
-	public function update_contrato($estado, $confirmId, $cant_insertadas) {
+	public function update_contrato($estado, $confirmId, $cant_insertadas, $recargas_contrato) {
 
 		$new_recargas = array();
-		$recargas_lanzadas = 0;
-		$serialized_recargas = getContrato($this->id_contrato);
 
-		if (!empty($serialized_recargas) && $recargas = unserialize($serialized_recargas)) {
-			foreach ($recargas as $key => $recarga) {
+		foreach ($recargas_contrato as $key => $recarga) {
 
+			$num = '';
+			if (isset($recarga['num'])) {
 				$num = $recarga['num'];
-				
-				$new_recargas[$key] = $recarga;
+			}
+			
+			$new_recargas[$key] = $recarga;
 
-				if ($key == $this->id_recarga) {
-					unset($new_recargas[$key]['num']);
-					$new_recargas[$key]['ConfirmId'] = $confirmId;
-					$new_recargas[$key]['status'] = ($estado == 1 ? 'Hecha' : 'Error');
-					$new_recargas[$key]['PhoneNumber'] = getNumber($recarga);
-					$recargas_lanzadas ++;
-				}
+			if ($key == $this->id_recarga && $estado != ESTADO_CONTRATO_NO_HACER) {
+				unset($new_recargas[$key]['num']);
+				$new_recargas[$key]['ConfirmId'] = $confirmId;
+				$new_recargas[$key]['status'] = ($estado == 1 ? 'Hecha' : 'Error');
+				$new_recargas[$key]['PhoneNumber'] = getNumber($recarga);
 			}
 		}
 
 		//return serialize($new_recargas);	
 		if (!empty($new_recargas) && is_array($new_recargas)){
 			$serialized_recargas = serialize($new_recargas);
-			$estado_contrato = ESTADO_PENDIENTE_MANUAL; //9
-
-			$total_recargas_hechas =($recargas_lanzadas + $cant_insertadas);
+			$total_recargas_hechas = $cant_insertadas;
 			$recargas_contrato = count($new_recargas);
 
-			if ($recargas_contrato == $total_recargas_hechas) {
-				$estado_contrato = ESTADO_CONTRATO_HECHO; //1
+			$estado_contrato = $estado;
+			if ($estado != ESTADO_CONTRATO_NO_HACER) {
+				$estado_contrato = ESTADO_PENDIENTE_MANUAL; //9
+
+				if ($total_recargas_hechas >= $recargas_contrato) {
+					$estado_contrato = ESTADO_CONTRATO_HECHO; //1
+				}
 			}
-			
+
+
+					
 			$sql = "update ".$this->prefix_table."contratos set recargas = '".$serialized_recargas."', `check` = ".$estado_contrato." where id = ".$this->id_contrato." limit 1";
 			$res = $this->con->query($sql);
 

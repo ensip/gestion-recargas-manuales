@@ -5,7 +5,7 @@ includeFuncionesGenerales();
 
 if (isset($_POST['alerta_empresa'])) {
 	
-	if (notificacionSMS($_POST['alerta_empresa'])) {
+	if (NotificacionSMS($_POST['alerta_empresa'])) {
 		$res = array('res' => $_POST['alerta_empresa']);
 	} else {
 		$res = array('error' => true);

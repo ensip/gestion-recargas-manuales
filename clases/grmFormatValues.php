@@ -18,16 +18,20 @@ class grmFormatValues {
 			$estado = self::estadoRecarga($value);//es posible que no se use
 			return $estado;
 		}
+		if ($key == 'token_contrato') {
+			return self::tokenContrato($value);
+		}
 		return $value;
 	}
 
 	public static function cantidadRecarga($value, $empresa) {
 		if ($empresa == 'ensip') {
-			$value = $precios_nuevos = (new PreciosNuevos())->convertMontoToCUP($value * 100, 'usd');
+			
+			//$value = $precios_nuevos = (new PreciosNuevos())->convertMontoToCUP($value * 100, 'usd');
 		}
 		if ($empresa == 'jyctel') {
 			$pn = new PreciosNuevos();
-			$value = $pn->convertCucToCup($value);
+			//$value = $pn->convertCucToCup($value);
 		}
 
 		return $value;
@@ -83,5 +87,8 @@ class grmFormatValues {
 			break;
 		}
 		return $estado;
+	}
+	public static function tokenContrato($value) {
+		return  utf8_encode(str_replace(array("\r","\n",","," ",":","(",")"),array(""),$value));
 	}
 }

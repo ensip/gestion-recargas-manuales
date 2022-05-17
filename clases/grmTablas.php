@@ -7,6 +7,7 @@ class camposTablasRecargas {
 		'cantidad_recarga', 
 		'fecha', 
 		'estado_recarga',
+		'tipo_recarga',
 		'token', 
 	);
 	const CAMPOS_JYCTEL = array(
@@ -71,7 +72,7 @@ class tablaRecargas {
 				
 
 				if (in_array($key, $this->campos)) {
-					$td .= "<td class='py-0 ".$key."_".$i."' >" . $this->formatValue($key, $valor) . "</td>";
+					$td .= sprintf('<td class="py-0 %s_%s" %s>%s</td>', $key, $i, ($key == 'tipo_recarga' ? 'attr-tipo-recarga="'.strtolower($valor).'"' : ''), $this->formatValue($key, $valor));
 			
 					if ($key == 'estado_recarga') {
 						$td .=  '<input type="hidden" value="'.$value.'" name="estado_original">';
@@ -84,10 +85,10 @@ class tablaRecargas {
 
 			$td .= '<td class="form-inline select_estado_recarga_'.$i.'">
 					<select class="browser-default custom-select custom-select-sm selected_recharge"" id="'.$i.'" onchange="selectNewState(this)">
-						<option value="">Estado Nuevo</option>
+						<option value="-">Estado Nuevo</option>
 						<option value="1">Hecha</option>
 						<option value="2">Error</option>
-
+						<option value="3">Quitar</option>
 					</select>'.
 					'<input type="hidden" name="selected_'.$i.'" value="0" >'.
 					'<input type="hidden" name="id_recharge_' . $i . '" value="' . $id_recharge . '" >'.

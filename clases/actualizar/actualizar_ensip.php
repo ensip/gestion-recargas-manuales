@@ -2,9 +2,9 @@
 
 class ActualizarEnsip {
 
-	private $estado_recarga = 0;
-	private $id_recarga = 0;
-	private $info_recarga = array();
+	protected $estado_recarga = 0;
+	protected $id_recarga = 0;
+	protected $info_recarga = array();
 
 	/*
 	 *	info_recarga : array {id, estado}
@@ -13,16 +13,16 @@ class ActualizarEnsip {
 		$this->info_recarga = $info_recarga;
 		$this->sacarDatos();
 	}
-	private function sacarDatos() {
+	protected function sacarDatos() {
 		$this->setNewStatus();
 		$this->setIdRecarga();
 	}
-	private function setIdRecarga() {
+	protected function setIdRecarga() {
 		if (isset($this->info_recarga['id'])) {
 			$this->id_recarga = $this->info_recarga['id'];
 		}
 	}
-	private function setNewStatus() {
+	protected function setNewStatus() {
 		if (isset($this->info_recarga['estado'])) {
 			$this->estado_recarga = $this->info_recarga['estado'];
 		}
@@ -41,7 +41,7 @@ class ActualizarEnsip {
 		$rpnv = new grmRecargasPendientesNoPreventa($this->id_recarga);
 		if ($datos_pendiente = $rpnv->esRecargaPendiente()) {	
 			if ($rpnv->updateByRegistro($this->estado_recarga)) {
-				$res_update = (new grmMobileLogs($datos_pendiente, $this->estado_recarga))->insert_mobile_logs();
+				$res_update = (new grmMobileLogs($datos_pendiente, $this->estado_recarga, PROGRAMADA_ENSIP))->insert_mobile_logs();
 			} else {
 				return array('error' => 'Registro recarga guardada no actualizado');
 			}
@@ -51,7 +51,7 @@ class ActualizarEnsip {
 		syslog(LOG_INFO, __FILE__ . ':' . __method__ . ':' . $log);
 
 		if ($res_update == 'ok') {
-			notificacionSMS('ensip');
+			NotificacionSMS('ensip');
 		}
 
 		return $res_update;

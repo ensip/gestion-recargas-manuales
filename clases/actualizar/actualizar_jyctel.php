@@ -44,6 +44,9 @@ class ActualizarJyctel {
 		if ($this->id_contrato == '-1') {
 			return array('error' => 'Id contrato no encontrado');
 		}
+		if ($this->estado_recarga == '0' || $this->estado_recarga == 0) {
+			return false;
+		}
 		
 		//inc/funciones.jyctel return array datos recarga from contratos
 		$recarga = getRecargaContrato($this->id_contrato, $this->id_recarga); 
@@ -61,39 +64,51 @@ class ActualizarJyctel {
 			'id_recarga_hecha' => $this->id_recarga
 		);
 		
+		$recargas_contrato = unserialize(getContrato($this->id_contrato));
+		
+		
+		$fo = new grmFactonline($data);
+		$fo->set_estado_recarga($this->estado_recarga);	
+		$cant_insertadas = $fo->getCantidadRecargasInsertadas();
+		
 		$res_update = 0;
-		//sleep(3);return 'ok';
-		if (!isRechargeDone($data)) { //funciones.jyctel.php
-			$recargas = array();
-			$pre = new grmPrepagos($data);
-			$fo = new grmFactonline($data);
+		
+		if (!$cant_insertadas || !isRechargeDone($data, $cant_insertadas, $recargas_contrato)) { //funciones.jyctel.php
 			
-			$cant_insertadas = $fo->getRecargasInsertadas();
+			
+			$recargas = array();
+			
+			$es_recarga_hecha = $fo->insert_recargas_contratos_hechas();
+		
+			//insert mobile_logs con todos los campos
+			if (!isset($recarga['ConfirmId'])) {
+				$recarga['ConfirmId'] = $confirmId;
+			}
 
-			$res_update_contrato = $pre->update_contrato($this->estado_recarga, $confirmId, $cant_insertadas); //OK PROBADO	 
+			$es_mobile_logs = $fo->insert_mobile_logs($recarga);
+			$cant_insertadas = $fo->getCantidadRecargasInsertadas();
+
+			if ($cant_insertadas) {
 				
-			if ($res_update_contrato) {
-
-				$fo->set_estado_recarga($this->estado_recarga);	
-				$fo->insert_recargas_contratos_hechas();
-
-				//insert mobile_logs con todos los campos
-				if (!isset($recarga['ConfirmId'])) {
-					$recarga['ConfirmId'] = $confirmId;
-				}
-				$res_update = $fo->insert_mobile_logs($recarga);
+				$pre = new grmPrepagos($data);
+				$res_update_contrato = $pre->update_contrato($this->estado_recarga, $confirmId, $cant_insertadas, $recargas_contrato); //OK PROBADO	 
 
 			} else {
 				return array('error' => 'Registro recarga guardada no actualizado');
 			}
 			
+		} else {
+			syslog(LOG_INFO, __FILE__ . ':' . __method__ . ':recarga no se hace: ' . $this->id_recarga);
 		}
 
-		$log = "actualizar recarga id : " .$this->id_recarga . " [".$celular."] con estado:".$this->estado_recarga . " res_insertar : ".($res_update ? 'ok' : 'ko')."";
+		$log = "actualizar recarga id : " .$this->id_recarga . " [".$celular."] con estado:".$this->estado_recarga . " res_insertar : ".($res_update_contrato ? 'ok' : 'ko')."";
 		syslog(LOG_INFO, __FILE__ . ':' . __method__ . ':' . $log);
 		
-		if ($res_update == 'ok') {
-			notificacionSMS('jyctel'); //funciones.generales
+		if ($res_update_contrato) {
+			NotificacionSMS('jyctel'); //funciones.generales
+			if ($this->estado_recarga) {
+				
+			}
 		}
 
 		return $res_update;

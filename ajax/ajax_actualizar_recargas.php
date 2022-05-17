@@ -25,8 +25,9 @@ includeFactoryActualizar();
 //			
 if (isset($_POST['actualizar_recarga_manual'])) {
 	
+	//print json_encode(array('result' => 1, 'text' => $text));
 	$res =  FactoryActualizar::actualizar($_POST);
-
+	
 	$result = 1;
 	$text = '';
 	if (isset($res['error'])) {
@@ -34,5 +35,4 @@ if (isset($_POST['actualizar_recarga_manual'])) {
 		$text = $res['error'];
 	}		
 	print json_encode(array('result' => $result, 'text' => $text));
-	
 }
